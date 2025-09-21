@@ -24,8 +24,8 @@ It combines **graph-based content lineage** with **deepfake detection heuristics
 ---
 
 ## 🏗️ Project Structure
-"""
+'''
 ├── app.py # Flask web application
 ├── requirements.txt # Python dependencies
 └── README.md # Project documentation
-"""
+'''
