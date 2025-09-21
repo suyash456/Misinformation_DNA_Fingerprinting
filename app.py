@@ -6,14 +6,24 @@ import networkx as nx
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template_string
 from werkzeug.utils import secure_filename
-import cv2
+try:
+    import cv2
+    CV2_AVAILABLE = True
+except ImportError:
+    CV2_AVAILABLE = False
+    print("Warning: OpenCV not available, using basic image analysis")
 from PIL import Image, ImageChops, ImageEnhance
 import re
 from collections import Counter
-import matplotlib
-matplotlib.use('Agg')  # Non-interactive backend
-import matplotlib.pyplot as plt
-import seaborn as sns
+try:
+    import matplotlib
+    matplotlib.use('Agg')  # Non-interactive backend
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    PLOTTING_AVAILABLE = True
+except ImportError:
+    PLOTTING_AVAILABLE = False
+    print("Warning: Plotting libraries not available")
 from io import BytesIO
 import base64
 
@@ -70,29 +80,53 @@ class ContentAnalyzer:
         # Convert PIL to numpy array
         img_array = np.array(image)
         
-        # Error Level Analysis (simplified)
-        resaved = image.copy()
-        resaved.save(BytesIO(), 'JPEG', quality=95)
-        
-        # Check for uniform regions (potential manipulation)
-        gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
-        edges = cv2.Canny(gray, 50, 150)
-        edge_density = np.sum(edges > 0) / (edges.shape[0] * edges.shape[1])
-        
-        # Analyze color distribution
-        hist_r = cv2.calcHist([img_array], [0], None, [256], [0, 256])
-        hist_g = cv2.calcHist([img_array], [1], None, [256], [0, 256])
-        hist_b = cv2.calcHist([img_array], [2], None, [256], [0, 256])
-        
-        # Simple manipulation score based on unusual color distributions
-        color_uniformity = np.std([np.std(hist_r), np.std(hist_g), np.std(hist_b)])
-        
-        return {
-            'edge_density': float(edge_density),
-            'color_uniformity': float(color_uniformity),
-            'manipulation_score': float(1 - edge_density + color_uniformity / 1000),
-            'suspicious_regions': edge_density < 0.1 or color_uniformity > 1000
-        }
+        if CV2_AVAILABLE:
+            # Error Level Analysis (simplified)
+            resaved = image.copy()
+            resaved.save(BytesIO(), 'JPEG', quality=95)
+            
+            # Check for uniform regions (potential manipulation)
+            gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+            edges = cv2.Canny(gray, 50, 150)
+            edge_density = np.sum(edges > 0) / (edges.shape[0] * edges.shape[1])
+            
+            # Analyze color distribution
+            hist_r = cv2.calcHist([img_array], [0], None, [256], [0, 256])
+            hist_g = cv2.calcHist([img_array], [1], None, [256], [0, 256])
+            hist_b = cv2.calcHist([img_array], [2], None, [256], [0, 256])
+            
+            # Simple manipulation score based on unusual color distributions
+            color_uniformity = np.std([np.std(hist_r), np.std(hist_g), np.std(hist_b)])
+            
+            return {
+                'edge_density': float(edge_density),
+                'color_uniformity': float(color_uniformity),
+                'manipulation_score': float(1 - edge_density + color_uniformity / 1000),
+                'suspicious_regions': edge_density < 0.1 or color_uniformity > 1000
+            }
+        else:
+            # Basic analysis without OpenCV
+            width, height = image.size
+            total_pixels = width * height
+            
+            # Simple color distribution analysis
+            colors = image.getcolors(maxcolors=total_pixels)
+            if colors:
+                unique_colors = len(colors)
+                color_ratio = unique_colors / total_pixels
+                
+                return {
+                    'color_diversity': float(color_ratio),
+                    'unique_colors': unique_colors,
+                    'manipulation_score': float(1 - color_ratio),
+                    'suspicious_regions': color_ratio < 0.1
+                }
+            else:
+                return {
+                    'manipulation_score': 0.0,
+                    'suspicious_regions': False,
+                    'note': 'Basic analysis - OpenCV not available'
+                }
 
 class MutationTracker:
     def __init__(self):
