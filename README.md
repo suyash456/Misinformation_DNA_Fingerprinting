@@ -29,3 +29,14 @@ It combines **graph-based content lineage** with **deepfake detection heuristics
 ├── requirements.txt # Python dependencies
 └── README.md # Project documentation
 ```
+
+
+
+```
+## ⚙️ Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/misinformation-dna.git
+   cd misinformation-dna
+```
