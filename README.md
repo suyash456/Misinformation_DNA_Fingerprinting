@@ -32,11 +32,10 @@ It combines **graph-based content lineage** with **deepfake detection heuristics
 
 
 
-```
 ## ⚙️ Installation
 
 1. **Clone the repository**
    ```bash
    git clone https://github.com/your-username/misinformation-dna.git
    cd misinformation-dna
-```
+
