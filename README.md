@@ -36,6 +36,6 @@ It combines **graph-based content lineage** with **deepfake detection heuristics
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/misinformation-dna.git
+   git clone https://github.com/suyash456/Misinformation_DNA_Fingerprinting.git
    cd misinformation-dna
 
